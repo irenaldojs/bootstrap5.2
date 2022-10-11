@@ -445,13 +445,12 @@ export class NavbarOffcanvasSidebar extends Widget {
         return `
             <nav id="divNavbar" class="navbar">
                 <div id="divContainer" class="container-fluid flex-wrap px-${this.navBarExpand}-3">
-                    <button id="btnLeftNavbarToggle" class="navbar-toggler p-1" type="button" data-bs-toggle="offcanvas" data-bs-target="#bdSidebar" aria-controls="bdSidebar" aria-label="Toggle docs navigation">
+                    <button id="btnLeftNavbarToggle" class="navbar-toggler p-1 me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#bdSidebar" aria-controls="bdSidebar" aria-label="Toggle docs navigation">
                         <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
                             <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
                         </svg>
                     </button>
-                    <a id="divNavbarBrand" class="navbar-brand p-0 me-0 me-${this.navBarExpand}-2" href="/" aria-label="Bootstrap">
-                    </a>
+                    <a id="divNavbarBrand" class="navbar-brand p-0 me-0 me-${this.navBarExpand}-2" href="/" aria-label="Bootstrap"></a>                    
                     <button id="btnRightNavbarToggle" class="navbar-toggler p-1" type="button" data-bs-toggle="offcanvas" data-bs-target="#bdNavbar" aria-controls="bdNavbar" aria-label="Toggle navigation">
                         <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-three-dots-vertical" viewBox="0 0 16 16">
                             <path d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/>
@@ -465,8 +464,8 @@ export class NavbarOffcanvasSidebar extends Widget {
                                     data-bs-dismiss="offcanvas" aria-label="Close"
                                     data-bs-target="#rightNavbar"></button>
                         </div>
-                        <div class="offcanvas-body p-4 pt-0 p-${this.navBarExpand}-0">
-                            <ul id="ulRightNavbarNav" class="navbar-nav flex-wrap ms-md-start"></ul>
+                        <div class="offcanvas-body p-4 pt-0 p-${this.navBarExpand}-0 ">
+                            <ul id="ulRightNavbarNav" class="navbar-nav flex-wrap ms-md-end"></ul>
                         </div>
                     </div>                    
                 </div>
@@ -552,27 +551,29 @@ export class NavbarOffcanvasSidebar extends Widget {
 
     }
 
-    public fromList(items: Array<AnchorNavigate>) {
-        items.forEach(item => {
+    public fromList(list: AnchorNavigate) {
+        list.list.forEach((item, index) => {
             var id = this.divLeftNavbar.id.toString()
-            var li = item.page.createElement('li')
-            var a = item.page.createElement('a', item.text)
+            var li = list.page.createElement('li')
+            var a = list.page.createElement('a', item.text)
             this.addListClass(a, [
                 'text-decoration-none'
             ])
             this.addListClass(li, [
                 'pb-1'
             ])
+            a.setAttribute('id', id + "_" + index)
             a.setAttribute('data-bs-dismiss', 'offcanvas')
             a.setAttribute('aria-label', 'Close')
             a.setAttribute('data-bs-target', '#' + id)
             a.setAttribute('data-bs-dismiss', 'offcanvas')
             a.setAttribute('href', '')
             li.appendChild(a)
-            item.setAnchor(a)
-            a.onclick = item.onClick.bind(item)
             this.ulSidebar.appendChild(li)
+            item.anchor = list.page.elementById(a.id) as HTMLAnchorElement
         })
+        list.navigateBind()
+
     }
 
     public bindSidebar(element: Element) {
@@ -620,26 +621,36 @@ export class NavbarOffcanvasSidebar extends Widget {
 }
 
 export class AnchorNavigate {
-    public text: string
+
     public page: PageShell
-    public view: UIView
-    public anchor: HTMLAnchorElement
+    public select = 0
+    public list: Array<{ text: string, view: UIView, anchor?: HTMLAnchorElement }>
 
-    constructor({ text, page, view }: {
-        text: string,
+    constructor({ page, list = [] }: {
         page: PageShell,
-        view: UIView
+        list: Array<{ text: string, view: UIView, anchor?: HTMLAnchorElement }>
     }) {
-        this.text = text,
-            this.page = page,
-            this.view = view
+        this.page = page
+        this.list = list
     }
 
-    public setAnchor(a: HTMLAnchorElement) {
-        this.anchor = a
+    navigateBind() {
+        var $ = this
+        this.list.forEach((item, index) => {
+            if (item.anchor != null) {
+                item.anchor.onclick = function () {
+                    $.select = index
+                    $.navigateToView()
+                }
+            }
+        })
+    }
+    navigateToView() {
+        var $ = this
+        var item = $.list[$.select]
+        if (item != null && item != undefined) {
+            $.page.navigateToView(item.view)
+        }
     }
 
-    public onClick() {
-        this.page.navigateToView(this.view)
-    }
 }

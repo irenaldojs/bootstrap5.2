@@ -11,9 +11,6 @@ class Examples extends UIView {
             bgNavColor: '#4c0bce',
             bgSideColor: '#c8c8fa',
         });
-        this.navigateList = [
-            { title: 'Accordion', view: new AccordionView }
-        ];
         Examples.$ = this;
     }
     buildLayout() {
@@ -22,7 +19,7 @@ class Examples extends UIView {
                 <header id="exHeader"></header>
                 <div id="exContainer" class="col-12 d-flex flex-row flex-fill">
                     <aside id="exAside" class="col-lg-2 d-sm-block p-lg-3"></aside>
-                    <main id="exMain" class="col-12 col-lg-10"></main>
+                    <main id="exMain" class="col-12 col-lg-10 p-2"></main>
                 </div>
                 <footer id="exFooter"></footer>
             <div>
@@ -43,15 +40,20 @@ class Examples extends UIView {
             { text: 'Link', href: '#exFooter' },
         ]);
         this.exNavbar.bindSidebar(this.exAside);
-        this.shellPage.navigateToView(new HomeView);
         this.bindLinks();
     }
     bindLinks() {
         var $ = Examples.$;
-        var list = this.navigateList.map(item => {
-            return new AnchorNavigate({ text: item.title, page: $.shellPage, view: item.view });
-        });
-        $.exNavbar.fromList(list);
+        if ($.navigateList == null || $.navigateList == undefined) {
+            $.navigateList = new AnchorNavigate({
+                page: $.shellPage, list: [
+                    { text: 'Home', view: new HomeView },
+                    { text: 'Accordion', view: new AccordionView('exMain') },
+                ]
+            });
+            $.exNavbar.fromList($.navigateList);
+            $.navigateList.navigateToView();
+        }
     }
 }
 //exports.Examples = Examples;
